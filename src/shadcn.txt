@@ -1,0 +1,10 @@
+# Run these commands to install the remaining UI components
+npx shadcn-ui@latest add button
+npx shadcn-ui@latest add input
+npx shadcn-ui@latest add label
+npx shadcn-ui@latest add card
+npx shadcn-ui@latest add alert
+npx shadcn-ui@latest add dropdown-menu
+npx shadcn-ui@latest add avatar
+npx shadcn-ui@latest add checkbox
+npx shadcn-ui@latest add skeleton
