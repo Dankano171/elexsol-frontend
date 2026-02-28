@@ -1,0 +1,46 @@
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import KPICard from '@/components/dashboard/KPICard';
+import RevenueChart from '@/components/dashboard/RevenueChart';
+import ActivityFeed from '@/components/dashboard/ActivityFeed';
+import { mockMetrics } from '@/lib/mock-data';
+import { formatCompactNaira, formatPercentage } from '@/lib/utils/format';
+import { DollarSign, Gauge, TrendingUp, AlertCircle } from 'lucide-react';
+
+export default function DashboardPage() {
+  const m = mockMetrics;
+  return (
+    <DashboardLayout title="Dashboard" subtitle="Financial overview for your business">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <KPICard
+          title="Total Revenue" value={formatCompactNaira(m.revenue.total)}
+          subtitle="vs last period" trendValue={formatPercentage(m.revenue.growth)}
+          icon={DollarSign} trend={m.revenue.trend} variant="primary" delay={0}
+        />
+        <KPICard
+          title="Monthly Revenue" value={formatCompactNaira(m.revenue.monthly)}
+          subtitle="this month" trendValue={formatPercentage(m.revenue.growth)}
+          icon={TrendingUp} trend="up" delay={0.08}
+        />
+        <KPICard
+          title="Payment Velocity" value={`${m.paymentVelocity.averageDays} days`}
+          subtitle="avg collection" trendValue="improving"
+          icon={Gauge} trend="up" variant="success" delay={0.16}
+        />
+        <KPICard
+          title="Outstanding" value={formatCompactNaira(m.outstanding.total)}
+          subtitle={`${m.outstanding.overdue} overdue`} trendValue={`${m.outstanding.count} invoices`}
+          icon={AlertCircle} trend="down" delay={0.24}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3">
+          <RevenueChart />
+        </div>
+        <div className="lg:col-span-2">
+          <ActivityFeed />
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
