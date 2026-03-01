@@ -5,21 +5,39 @@ import { Zap, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 import { ROUTES } from '@/lib/constants/routes';
+import { authApi } from '@/lib/api/auth';
+import { useAuthStore } from '@/lib/store/authStore';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { setAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('admin@elexsol.ng');
+  const [password, setPassword] = useState('');
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const data: any = await authApi.login({ email, password, mfaCode: mfaCode || undefined });
+      if (data?.mfaRequired && !mfaCode) {
+        setMfaRequired(true);
+        setLoading(false);
+        return;
+      }
+      setAuth(data.user, data.accessToken);
+      toast.success('Welcome back!');
       navigate(ROUTES.DASHBOARD);
-    }, 800);
+    } catch (error: any) {
+      toast.error(error?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,7 +108,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
-              <Input id="email" type="email" placeholder="you@company.ng" className="h-11" defaultValue="admin@elexsol.ng" />
+              <Input id="email" type="email" placeholder="you@company.ng" className="h-11" value={email} onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -102,7 +120,9 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   className="h-11 pr-10"
-                  defaultValue="password123"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Enter your password"
                 />
                 <button
                   type="button"
@@ -113,8 +133,16 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {mfaRequired && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
+                <Label htmlFor="mfa" className="text-sm font-medium">MFA Code</Label>
+                <Input id="mfa" placeholder="Enter 6-digit code" className="h-11" value={mfaCode} onChange={e => setMfaCode(e.target.value)} maxLength={6} />
+              </motion.div>
+            )}
+
             <Button type="submit" className="w-full h-11 font-medium" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Signing in...' : mfaRequired ? 'Verify & Sign in' : 'Sign in'}
             </Button>
           </form>
 

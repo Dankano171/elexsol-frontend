@@ -10,12 +10,46 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { User, Building2, Bell, Shield, Palette, Save, CheckCircle2 } from 'lucide-react';
+import { User, Building2, Bell, Shield, Save, CheckCircle2 } from 'lucide-react';
 import { NIGERIAN_STATES } from '@/lib/constants/nigerian-states';
+import { useAuthStore } from '@/lib/store/authStore';
+import { authApi } from '@/lib/api/auth';
+import { toast } from 'sonner';
 
 export default function SettingsPage() {
-  const [saved, setSaved] = useState(false);
-  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+  const { user } = useAuthStore();
+  const [saving, setSaving] = useState(false);
+  const [passwordData, setPasswordData] = useState({ current: '', newPass: '', confirm: '' });
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      // API call would go here for profile update
+      toast.success('Settings saved successfully');
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPass !== passwordData.confirm) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (passwordData.newPass.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    try {
+      await authApi.changePassword(passwordData.current, passwordData.newPass);
+      toast.success('Password updated successfully');
+      setPasswordData({ current: '', newPass: '', confirm: '' });
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update password');
+    }
+  };
 
   return (
     <DashboardLayout title="Settings" subtitle="Manage your account & preferences">
@@ -38,15 +72,15 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-xs">First Name</Label>
-                  <Input id="firstName" defaultValue="Adebayo" />
+                  <Input id="firstName" defaultValue={user?.firstName || 'Adebayo'} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName" className="text-xs">Last Name</Label>
-                  <Input id="lastName" defaultValue="Ogunlesi" />
+                  <Input id="lastName" defaultValue={user?.lastName || 'Ogunlesi'} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-xs">Email Address</Label>
-                  <Input id="email" defaultValue="adebayo@elexsol.ng" type="email" />
+                  <Input id="email" defaultValue={user?.email || 'adebayo@elexsol.ng'} type="email" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="text-xs">Phone Number</Label>
@@ -56,12 +90,14 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="role" className="text-xs">Role</Label>
                 <div className="flex items-center gap-2">
-                  <Input id="role" defaultValue="Finance Manager" disabled className="max-w-xs" />
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">Manager</Badge>
+                  <Input id="role" defaultValue={user?.role || 'Finance Manager'} disabled className="max-w-xs" />
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                    {user?.role || 'Manager'}
+                  </Badge>
                 </div>
               </div>
-              <Button onClick={handleSave} className="text-xs">
-                {saved ? <><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Saved</> : <><Save className="w-3.5 h-3.5 mr-1.5" /> Save Changes</>}
+              <Button onClick={handleSave} className="text-xs" disabled={saving}>
+                {saving ? <><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Saving...</> : <><Save className="w-3.5 h-3.5 mr-1.5" /> Save Changes</>}
               </Button>
             </Card>
           </motion.div>
@@ -78,7 +114,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-xs">Business Name</Label>
-                  <Input defaultValue="Elexsol Technologies Ltd" />
+                  <Input defaultValue={user?.businessName || 'Elexsol Technologies Ltd'} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs">Tax Identification Number (TIN)</Label>
@@ -112,8 +148,8 @@ export default function SettingsPage() {
                   <Input defaultValue="12 Adeola Odeku Street, Victoria Island" />
                 </div>
               </div>
-              <Button onClick={handleSave} className="text-xs">
-                {saved ? <><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Saved</> : <><Save className="w-3.5 h-3.5 mr-1.5" /> Save Changes</>}
+              <Button onClick={handleSave} className="text-xs" disabled={saving}>
+                {saving ? <><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Saving...</> : <><Save className="w-3.5 h-3.5 mr-1.5" /> Save Changes</>}
               </Button>
             </Card>
           </motion.div>
@@ -160,18 +196,18 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg">
                 <div className="space-y-2 md:col-span-2">
                   <Label className="text-xs">Current Password</Label>
-                  <Input type="password" />
+                  <Input type="password" value={passwordData.current} onChange={e => setPasswordData(p => ({ ...p, current: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs">New Password</Label>
-                  <Input type="password" />
+                  <Input type="password" value={passwordData.newPass} onChange={e => setPasswordData(p => ({ ...p, newPass: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs">Confirm Password</Label>
-                  <Input type="password" />
+                  <Input type="password" value={passwordData.confirm} onChange={e => setPasswordData(p => ({ ...p, confirm: e.target.value }))} />
                 </div>
               </div>
-              <Button onClick={handleSave} className="text-xs">Update Password</Button>
+              <Button onClick={handlePasswordChange} className="text-xs">Update Password</Button>
             </Card>
 
             <Card className="p-6 shadow-card border-none space-y-4">
@@ -180,7 +216,9 @@ export default function SettingsPage() {
                   <h3 className="text-sm font-semibold text-foreground mb-1">Two-Factor Authentication</h3>
                   <p className="text-xs text-muted-foreground">Add an extra layer of security to your account</p>
                 </div>
-                <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">Enabled</Badge>
+                <Badge variant="outline" className={`text-xs ${user?.mfaEnabled ? 'bg-success/10 text-success border-success/20' : 'bg-muted text-muted-foreground'}`}>
+                  {user?.mfaEnabled ? 'Enabled' : 'Disabled'}
+                </Badge>
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -188,7 +226,9 @@ export default function SettingsPage() {
                   <p className="text-sm font-medium text-foreground">Authenticator App</p>
                   <p className="text-xs text-muted-foreground">Google Authenticator or similar TOTP app</p>
                 </div>
-                <Button variant="outline" size="sm" className="text-xs">Reconfigure</Button>
+                <Button variant="outline" size="sm" className="text-xs">
+                  {user?.mfaEnabled ? 'Reconfigure' : 'Setup'}
+                </Button>
               </div>
               <div className="flex items-center justify-between">
                 <div>
