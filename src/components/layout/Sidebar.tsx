@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -6,6 +7,8 @@ import {
   FileText, Settings, ChevronLeft, ChevronRight, LogOut, Zap
 } from 'lucide-react';
 import { ROUTES } from '@/lib/constants/routes';
+import { useAuthStore } from '@/lib/store/authStore';
+import { toast } from 'sonner';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: ROUTES.DASHBOARD },
@@ -20,6 +23,14 @@ const navItems = [
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { clearAuth } = useAuthStore();
+
+  const handleLogout = () => {
+    clearAuth();
+    toast.success('Logged out');
+    navigate('/login');
+  };
 
   return (
     <motion.aside
@@ -80,7 +91,10 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="px-2 pb-4 space-y-1">
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full transition-colors">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full transition-colors"
+        >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {!collapsed && <span>Log out</span>}
         </button>

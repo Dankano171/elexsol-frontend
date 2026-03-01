@@ -4,9 +4,13 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { mockComplianceInvoices } from '@/lib/mock-data';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useCompliance } from '@/lib/hooks/useCompliance';
+import { useComplianceStore } from '@/lib/store/complianceStore';
 import { formatNaira, formatDate } from '@/lib/utils/format';
-import { AlertTriangle, CheckCircle, Clock, FileText, Download, Filter } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, FileText, Download, Filter, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 const statusConfig: Record<string, { label: string; className: string; icon: any }> = {
   approved: { label: 'Approved', className: 'bg-success/10 text-success border-success/20', icon: CheckCircle },
@@ -17,17 +21,40 @@ const statusConfig: Record<string, { label: string; className: string; icon: any
 };
 
 export default function CompliancePage() {
-  const flaggedCount = mockComplianceInvoices.filter(i => i.status === 'flagged').length;
+  const { invoices, isLoading, validate, bulkValidate, exportFlagged } = useCompliance();
+  const { selectedRows, toggleRow, selectAll, clearSelection } = useComplianceStore();
+
+  const flaggedCount = invoices.filter((i: any) => i.status === 'flagged').length;
+
+  const handleBulkValidate = () => {
+    if (selectedRows.length === 0) {
+      toast.error('Select invoices to validate');
+      return;
+    }
+    bulkValidate(selectedRows);
+    clearSelection();
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Compliance Center" subtitle="FIRS invoice validation & management">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+        <Skeleton className="h-96 rounded-xl" />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Compliance Center" subtitle="FIRS invoice validation & management">
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Total Invoices', value: mockComplianceInvoices.length, color: 'text-foreground' },
-          { label: 'Approved', value: mockComplianceInvoices.filter(i => i.status === 'approved').length, color: 'text-success' },
+          { label: 'Total Invoices', value: invoices.length, color: 'text-foreground' },
+          { label: 'Approved', value: invoices.filter((i: any) => i.status === 'approved').length, color: 'text-success' },
           { label: 'Flagged', value: flaggedCount, color: 'text-destructive' },
-          { label: 'Pending', value: mockComplianceInvoices.filter(i => i.status === 'submitted' || i.status === 'draft').length, color: 'text-info' },
+          { label: 'Pending', value: invoices.filter((i: any) => i.status === 'submitted' || i.status === 'draft').length, color: 'text-info' },
         ].map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
             <Card className="p-4 shadow-card border-none text-center">
@@ -39,10 +66,17 @@ export default function CompliancePage() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="text-xs"><Filter className="w-3.5 h-3.5 mr-1.5" />Filter</Button>
-          <Button variant="outline" size="sm" className="text-xs"><Download className="w-3.5 h-3.5 mr-1.5" />Export</Button>
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => exportFlagged('csv')}>
+            <Download className="w-3.5 h-3.5 mr-1.5" />Export
+          </Button>
+          {selectedRows.length > 0 && (
+            <Button size="sm" className="text-xs" onClick={handleBulkValidate}>
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />Validate Selected ({selectedRows.length})
+            </Button>
+          )}
         </div>
         {flaggedCount > 0 && (
           <Badge className="bg-destructive/10 text-destructive border-destructive/20">
@@ -57,6 +91,12 @@ export default function CompliancePage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30">
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={selectedRows.length === invoices.length && invoices.length > 0}
+                    onCheckedChange={(checked) => checked ? selectAll(invoices.map((i: any) => i.id)) : clearSelection()}
+                  />
+                </TableHead>
                 <TableHead className="text-xs font-semibold">Invoice #</TableHead>
                 <TableHead className="text-xs font-semibold">Customer</TableHead>
                 <TableHead className="text-xs font-semibold">TIN</TableHead>
@@ -64,11 +104,12 @@ export default function CompliancePage() {
                 <TableHead className="text-xs font-semibold text-right">Amount</TableHead>
                 <TableHead className="text-xs font-semibold text-right">Tax</TableHead>
                 <TableHead className="text-xs font-semibold">Status</TableHead>
+                <TableHead className="text-xs font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockComplianceInvoices.map((inv) => {
-                const status = statusConfig[inv.status];
+              {invoices.map((inv: any) => {
+                const status = statusConfig[inv.status] || statusConfig.draft;
                 const StatusIcon = status.icon;
                 const isFlagged = inv.status === 'flagged';
                 return (
@@ -76,6 +117,9 @@ export default function CompliancePage() {
                     key={inv.id}
                     className={`cursor-pointer hover:bg-muted/30 transition-colors ${isFlagged ? 'bg-destructive/3' : ''}`}
                   >
+                    <TableCell>
+                      <Checkbox checked={selectedRows.includes(inv.id)} onCheckedChange={() => toggleRow(inv.id)} />
+                    </TableCell>
                     <TableCell className="text-sm font-medium">{inv.invoiceNumber}</TableCell>
                     <TableCell className="text-sm">{inv.customerName}</TableCell>
                     <TableCell className="text-sm font-mono text-xs">
@@ -91,8 +135,15 @@ export default function CompliancePage() {
                       </Badge>
                       {isFlagged && inv.validationErrors && (
                         <p className="text-[10px] text-destructive mt-1">
-                          {inv.validationErrors.map(e => e.message).join(', ')}
+                          {inv.validationErrors.map((e: any) => e.message).join(', ')}
                         </p>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isFlagged && (
+                        <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => validate(inv.id)}>
+                          <RefreshCw className="w-3 h-3 mr-1" /> Re-validate
+                        </Button>
                       )}
                     </TableCell>
                   </TableRow>
