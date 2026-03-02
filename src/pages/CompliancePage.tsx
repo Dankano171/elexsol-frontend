@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
+import ApiErrorState from '@/components/shared/ApiErrorState';
 import { useCompliance } from '@/lib/hooks/useCompliance';
 import { useComplianceStore } from '@/lib/store/complianceStore';
 import { formatNaira, formatDate } from '@/lib/utils/format';
@@ -21,7 +22,7 @@ const statusConfig: Record<string, { label: string; className: string; icon: any
 };
 
 export default function CompliancePage() {
-  const { invoices, isLoading, validate, bulkValidate, exportFlagged } = useCompliance();
+  const { invoices, isLoading, error, refetch, validate, bulkValidate, exportFlagged } = useCompliance();
   const { selectedRows, toggleRow, selectAll, clearSelection } = useComplianceStore();
 
   const flaggedCount = invoices.filter((i: any) => i.status === 'flagged').length;
@@ -42,6 +43,14 @@ export default function CompliancePage() {
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
         </div>
         <Skeleton className="h-96 rounded-xl" />
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout title="Compliance Center" subtitle="FIRS invoice validation & management">
+        <ApiErrorState message={(error as Error).message} onRetry={refetch} />
       </DashboardLayout>
     );
   }
@@ -113,30 +122,20 @@ export default function CompliancePage() {
                 const StatusIcon = status.icon;
                 const isFlagged = inv.status === 'flagged';
                 return (
-                  <TableRow
-                    key={inv.id}
-                    className={`cursor-pointer hover:bg-muted/30 transition-colors ${isFlagged ? 'bg-destructive/3' : ''}`}
-                  >
-                    <TableCell>
-                      <Checkbox checked={selectedRows.includes(inv.id)} onCheckedChange={() => toggleRow(inv.id)} />
-                    </TableCell>
+                  <TableRow key={inv.id} className={`cursor-pointer hover:bg-muted/30 transition-colors ${isFlagged ? 'bg-destructive/3' : ''}`}>
+                    <TableCell><Checkbox checked={selectedRows.includes(inv.id)} onCheckedChange={() => toggleRow(inv.id)} /></TableCell>
                     <TableCell className="text-sm font-medium">{inv.invoiceNumber}</TableCell>
                     <TableCell className="text-sm">{inv.customerName}</TableCell>
-                    <TableCell className="text-sm font-mono text-xs">
-                      {inv.customerTin || <span className="text-destructive italic">Missing</span>}
-                    </TableCell>
+                    <TableCell className="text-sm font-mono text-xs">{inv.customerTin || <span className="text-destructive italic">Missing</span>}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{formatDate(inv.issueDate)}</TableCell>
                     <TableCell className="text-sm text-right font-medium">{formatNaira(inv.totalAmount)}</TableCell>
                     <TableCell className="text-sm text-right text-muted-foreground">{formatNaira(inv.taxAmount)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`text-xs ${status.className}`}>
-                        <StatusIcon className="w-3 h-3 mr-1" />
-                        {status.label}
+                        <StatusIcon className="w-3 h-3 mr-1" />{status.label}
                       </Badge>
                       {isFlagged && inv.validationErrors && (
-                        <p className="text-[10px] text-destructive mt-1">
-                          {inv.validationErrors.map((e: any) => e.message).join(', ')}
-                        </p>
+                        <p className="text-[10px] text-destructive mt-1">{inv.validationErrors.map((e: any) => e.message).join(', ')}</p>
                       )}
                     </TableCell>
                     <TableCell>

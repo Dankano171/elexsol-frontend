@@ -3,15 +3,15 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import ApiErrorState from '@/components/shared/ApiErrorState';
 import { useAdmin } from '@/lib/hooks/useAdmin';
 import { motion } from 'framer-motion';
 import { Activity, Users, Shield, Download, Server, BarChart3 } from 'lucide-react';
 
 export default function AdminPage() {
-  const { metrics, metricsLoading, sectors, users, auditLogs, exportData } = useAdmin();
+  const { metrics, metricsLoading, metricsError, sectors, sectorsError, users, usersError, auditLogs, auditLogsError, refetchMetrics, exportData } = useAdmin();
 
   return (
     <DashboardLayout title="Admin Hub" subtitle="System administration & analytics">
@@ -29,6 +29,8 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
               </div>
+            ) : metricsError ? (
+              <ApiErrorState message={(metricsError as Error).message} onRetry={refetchMetrics} />
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
@@ -39,7 +41,7 @@ export default function AdminPage() {
                 ].map((item, i) => (
                   <Card key={i} className="p-4 shadow-card border-none">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/8 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                         <item.icon className="w-5 h-5 text-primary" />
                       </div>
                       <div>
@@ -64,75 +66,87 @@ export default function AdminPage() {
         </TabsContent>
 
         <TabsContent value="sectors">
-          <Card className="p-5 shadow-card border-none">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Sector Performance</h3>
-            {sectors ? (
-              <div className="space-y-3">
-                {(sectors as any[]).map((sector: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-none">
-                    <span className="text-sm text-foreground">{sector.name}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-foreground">{sector.invoiceCount} invoices</span>
-                      <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">{sector.complianceRate}%</Badge>
+          {sectorsError ? (
+            <ApiErrorState message={(sectorsError as Error).message} />
+          ) : (
+            <Card className="p-5 shadow-card border-none">
+              <h3 className="text-sm font-semibold text-foreground mb-4">Sector Performance</h3>
+              {sectors ? (
+                <div className="space-y-3">
+                  {(sectors as any[]).map((sector: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-none">
+                      <span className="text-sm text-foreground">{sector.name}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-foreground">{sector.invoiceCount} invoices</span>
+                        <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">{sector.complianceRate}%</Badge>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Loading sector data...</p>
-            )}
-          </Card>
+                  ))}
+                </div>
+              ) : (
+                <Skeleton className="h-40 rounded-xl" />
+              )}
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="users">
-          <Card className="p-5 shadow-card border-none">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Admin Users</h3>
-            {users ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Name</TableHead>
-                    <TableHead className="text-xs">Email</TableHead>
-                    <TableHead className="text-xs">Role</TableHead>
-                    <TableHead className="text-xs">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(users as any[]).map((u: any) => (
-                    <TableRow key={u.id}>
-                      <TableCell className="text-sm">{u.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-                      <TableCell><Badge variant="outline" className="text-xs">{u.role}</Badge></TableCell>
-                      <TableCell><Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">Active</Badge></TableCell>
+          {usersError ? (
+            <ApiErrorState message={(usersError as Error).message} />
+          ) : (
+            <Card className="p-5 shadow-card border-none">
+              <h3 className="text-sm font-semibold text-foreground mb-4">Admin Users</h3>
+              {users ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Name</TableHead>
+                      <TableHead className="text-xs">Email</TableHead>
+                      <TableHead className="text-xs">Role</TableHead>
+                      <TableHead className="text-xs">Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="text-sm text-muted-foreground">Loading users...</p>
-            )}
-          </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {(users as any[]).map((u: any) => (
+                      <TableRow key={u.id}>
+                        <TableCell className="text-sm">{u.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs">{u.role}</Badge></TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">Active</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <Skeleton className="h-40 rounded-xl" />
+              )}
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="audit">
-          <Card className="p-5 shadow-card border-none">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Audit Log</h3>
-            {auditLogs ? (
-              <div className="space-y-2">
-                {(auditLogs as any[]).map((log: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50">
-                    <div>
-                      <p className="text-sm text-foreground">{log.action}</p>
-                      <p className="text-xs text-muted-foreground">{log.user} • {log.ip}</p>
+          {auditLogsError ? (
+            <ApiErrorState message={(auditLogsError as Error).message} />
+          ) : (
+            <Card className="p-5 shadow-card border-none">
+              <h3 className="text-sm font-semibold text-foreground mb-4">Audit Log</h3>
+              {auditLogs ? (
+                <div className="space-y-2">
+                  {(auditLogs as any[]).map((log: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50">
+                      <div>
+                        <p className="text-sm text-foreground">{log.action}</p>
+                        <p className="text-xs text-muted-foreground">{log.user} • {log.ip}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Loading audit logs...</p>
-            )}
-          </Card>
+                  ))}
+                </div>
+              ) : (
+                <Skeleton className="h-40 rounded-xl" />
+              )}
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </DashboardLayout>

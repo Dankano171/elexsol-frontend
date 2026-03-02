@@ -2,12 +2,19 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import ApiErrorState from '@/components/shared/ApiErrorState';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, DollarSign, Clock, Wallet, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { formatNaira } from '@/lib/utils/format';
+import { useDashboard } from '@/lib/hooks/useDashboard';
+import { isDemoAccount } from '@/lib/utils/isDemoAccount';
+import { useQuery } from '@tanstack/react-query';
+import { dashboardApi } from '@/lib/api/dashboard';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
-const revenueData = [
+// Mock data for demo
+const mockRevenueData = [
   { month: 'Jul', revenue: 9_200_000, expenses: 6_100_000, profit: 3_100_000 },
   { month: 'Aug', revenue: 10_800_000, expenses: 6_500_000, profit: 4_300_000 },
   { month: 'Sep', revenue: 9_600_000, expenses: 7_200_000, profit: 2_400_000 },
@@ -15,8 +22,7 @@ const revenueData = [
   { month: 'Nov', revenue: 12_100_000, expenses: 7_100_000, profit: 5_000_000 },
   { month: 'Dec', revenue: 12_750_000, expenses: 7_400_000, profit: 5_350_000 },
 ];
-
-const velocityData = [
+const mockVelocityData = [
   { month: 'Jul', avgDays: 18, medianDays: 15 },
   { month: 'Aug', avgDays: 16, medianDays: 13 },
   { month: 'Sep', avgDays: 19, medianDays: 16 },
@@ -24,8 +30,7 @@ const velocityData = [
   { month: 'Nov', avgDays: 14, medianDays: 11 },
   { month: 'Dec', avgDays: 14, medianDays: 11 },
 ];
-
-const cashflowData = [
+const mockCashflowData = [
   { month: 'Jan', inflow: 13_500_000, outflow: 8_200_000 },
   { month: 'Feb', inflow: 14_200_000, outflow: 8_900_000 },
   { month: 'Mar', inflow: 15_100_000, outflow: 9_100_000 },
@@ -33,51 +38,103 @@ const cashflowData = [
   { month: 'May (proj)', inflow: 16_500_000, outflow: 9_700_000 },
   { month: 'Jun (proj)', inflow: 17_200_000, outflow: 10_000_000 },
 ];
-
-const sourceBreakdown = [
+const mockSourceBreakdown = [
   { name: 'Zoho Books', value: 62, color: 'hsl(210, 100%, 35%)' },
   { name: 'WhatsApp', value: 24, color: 'hsl(145, 63%, 42%)' },
   { name: 'QuickBooks', value: 14, color: 'hsl(45, 100%, 51%)' },
 ];
-
-const topClients = [
+const mockTopClients = [
   { name: 'Dangote Industries', revenue: 18_500_000, invoices: 24, growth: 12.3 },
   { name: 'MTN Nigeria', revenue: 14_200_000, invoices: 18, growth: 8.7 },
   { name: 'Access Bank Plc', revenue: 11_800_000, invoices: 15, growth: -2.1 },
   { name: 'Flour Mills of Nigeria', revenue: 9_600_000, invoices: 12, growth: 15.4 },
   { name: 'Nigerian Breweries', revenue: 7_200_000, invoices: 9, growth: 5.2 },
 ];
+const mockMetricCards = [
+  { label: 'Total Revenue', value: formatNaira(84_500_000), change: '+18.5%', up: true, icon: DollarSign },
+  { label: 'Net Profit', value: formatNaira(24_750_000), change: '+22.1%', up: true, icon: Wallet },
+  { label: 'Avg. Payment Days', value: '14 days', change: '-2 days', up: true, icon: Clock },
+  { label: 'Growth Rate', value: '18.5%', change: '+3.2%', up: true, icon: BarChart3 },
+];
 
 const formatAxis = (value: number) => `₦${(value / 1_000_000).toFixed(0)}M`;
 
 export default function AnalyticsPage() {
+  const demo = isDemoAccount();
+
+  const revenueQuery = useQuery({
+    queryKey: ['analytics', 'revenue'],
+    queryFn: () => dashboardApi.getRevenueChart('year') as Promise<any>,
+    enabled: !demo,
+    retry: 1,
+  });
+
+  const velocityQuery = useQuery({
+    queryKey: ['analytics', 'velocity'],
+    queryFn: () => dashboardApi.getPaymentVelocity('quarter') as Promise<any>,
+    enabled: !demo,
+    retry: 1,
+  });
+
+  const cashflowQuery = useQuery({
+    queryKey: ['analytics', 'cashflow'],
+    queryFn: () => dashboardApi.getCashFlowForecast(90) as Promise<any>,
+    enabled: !demo,
+    retry: 1,
+  });
+
+  const anyLoading = !demo && (revenueQuery.isLoading || velocityQuery.isLoading || cashflowQuery.isLoading);
+  const anyError = !demo && (revenueQuery.error || velocityQuery.error || cashflowQuery.error);
+
+  const revenueData = demo ? mockRevenueData : (revenueQuery.data?.chartData ?? mockRevenueData);
+  const velocityData = demo ? mockVelocityData : (velocityQuery.data?.chartData ?? mockVelocityData);
+  const cashflowData = demo ? mockCashflowData : (cashflowQuery.data?.chartData ?? mockCashflowData);
+  const metricCards = demo ? mockMetricCards : (revenueQuery.data?.metrics ?? mockMetricCards);
+  const topClients = demo ? mockTopClients : (revenueQuery.data?.topClients ?? mockTopClients);
+
+  if (anyLoading) {
+    return (
+      <DashboardLayout title="Analytics" subtitle="Revenue & growth insights">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        </div>
+        <Skeleton className="h-96 rounded-xl" />
+      </DashboardLayout>
+    );
+  }
+
+  if (anyError) {
+    return (
+      <DashboardLayout title="Analytics" subtitle="Revenue & growth insights">
+        <ApiErrorState message={((revenueQuery.error || velocityQuery.error || cashflowQuery.error) as Error)?.message} onRetry={() => { revenueQuery.refetch(); velocityQuery.refetch(); cashflowQuery.refetch(); }} />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="Analytics" subtitle="Revenue & growth insights">
-      {/* Top Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Total Revenue', value: formatNaira(84_500_000), change: '+18.5%', up: true, icon: DollarSign },
-          { label: 'Net Profit', value: formatNaira(24_750_000), change: '+22.1%', up: true, icon: Wallet },
-          { label: 'Avg. Payment Days', value: '14 days', change: '-2 days', up: true, icon: Clock },
-          { label: 'Growth Rate', value: '18.5%', change: '+3.2%', up: true, icon: BarChart3 },
-        ].map((metric, i) => (
-          <motion.div key={metric.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-            <Card className="p-4 shadow-card border-none">
-              <div className="flex items-start justify-between mb-2">
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{metric.label}</p>
-                <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center">
-                  <metric.icon className="w-4 h-4 text-primary" />
+        {(Array.isArray(metricCards) ? metricCards : mockMetricCards).map((metric: any, i: number) => {
+          const IconComp = metric.icon || DollarSign;
+          return (
+            <motion.div key={metric.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
+              <Card className="p-4 shadow-card border-none">
+                <div className="flex items-start justify-between mb-2">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{metric.label}</p>
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    {typeof IconComp === 'function' ? <IconComp className="w-4 h-4 text-primary" /> : <DollarSign className="w-4 h-4 text-primary" />}
+                  </div>
                 </div>
-              </div>
-              <p className="text-xl font-bold text-foreground mb-1">{metric.value}</p>
-              <div className="flex items-center gap-1">
-                {metric.up ? <ArrowUpRight className="w-3.5 h-3.5 text-success" /> : <ArrowDownRight className="w-3.5 h-3.5 text-destructive" />}
-                <span className={`text-xs font-medium ${metric.up ? 'text-success' : 'text-destructive'}`}>{metric.change}</span>
-                <span className="text-xs text-muted-foreground">vs last period</span>
-              </div>
-            </Card>
-          </motion.div>
-        ))}
+                <p className="text-xl font-bold text-foreground mb-1">{metric.value}</p>
+                <div className="flex items-center gap-1">
+                  {metric.up !== false ? <ArrowUpRight className="w-3.5 h-3.5 text-success" /> : <ArrowDownRight className="w-3.5 h-3.5 text-destructive" />}
+                  <span className={`text-xs font-medium ${metric.up !== false ? 'text-success' : 'text-destructive'}`}>{metric.change}</span>
+                  <span className="text-xs text-muted-foreground">vs last period</span>
+                </div>
+              </Card>
+            </motion.div>
+          );
+        })}
       </div>
 
       <Tabs defaultValue="revenue" className="space-y-4">
@@ -114,14 +171,13 @@ export default function AnalyticsPage() {
                 </ResponsiveContainer>
               </div>
             </Card>
-
             <Card className="p-5 shadow-card border-none">
               <h3 className="text-sm font-semibold text-foreground mb-4">Revenue by Source</h3>
               <div className="h-52">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={sourceBreakdown} cx="50%" cy="50%" innerRadius={50} outerRadius={75} dataKey="value" paddingAngle={4}>
-                      {sourceBreakdown.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    <Pie data={mockSourceBreakdown} cx="50%" cy="50%" innerRadius={50} outerRadius={75} dataKey="value" paddingAngle={4}>
+                      {mockSourceBreakdown.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                     </Pie>
                     <Legend formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>} />
                   </PieChart>
@@ -171,12 +227,11 @@ export default function AnalyticsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Top Clients */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-6">
         <Card className="p-5 shadow-card border-none">
           <h3 className="text-sm font-semibold text-foreground mb-4">Top Clients by Revenue</h3>
           <div className="space-y-3">
-            {topClients.map((client, i) => (
+            {(Array.isArray(topClients) ? topClients : mockTopClients).map((client: any, i: number) => (
               <div key={client.name} className="flex items-center justify-between py-2 border-b border-border last:border-none">
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-medium text-muted-foreground w-5">{i + 1}</span>

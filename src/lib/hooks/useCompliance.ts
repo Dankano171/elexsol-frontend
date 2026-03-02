@@ -1,26 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { complianceApi } from '@/lib/api/compliance';
 import { mockComplianceInvoices } from '@/lib/mock-data';
+import { isDemoAccount } from '@/lib/utils/isDemoAccount';
 import { toast } from 'sonner';
 
 export function useCompliance() {
   const queryClient = useQueryClient();
+  const demo = isDemoAccount();
 
   const invoicesQuery = useQuery({
     queryKey: ['compliance', 'invoices'],
-    queryFn: async () => {
-      const res = await complianceApi.getFlaggedInvoices();
-      return res as any;
-    },
+    queryFn: () => complianceApi.getFlaggedInvoices() as Promise<any>,
+    enabled: !demo,
     retry: 1,
   });
 
   const summaryQuery = useQuery({
     queryKey: ['compliance', 'summary'],
-    queryFn: async () => {
-      const res = await complianceApi.getSummary();
-      return res as any;
-    },
+    queryFn: () => complianceApi.getSummary() as Promise<any>,
+    enabled: !demo,
     retry: 1,
   });
 
@@ -67,9 +65,25 @@ export function useCompliance() {
     onError: (error: Error) => toast.error(error.message || 'Export failed'),
   });
 
+  if (demo) {
+    return {
+      invoices: mockComplianceInvoices,
+      isLoading: false,
+      error: null,
+      refetch: () => {},
+      summary: null,
+      validate: validateMutation.mutate,
+      updateField: updateFieldMutation.mutate,
+      bulkValidate: bulkValidateMutation.mutate,
+      exportFlagged: exportMutation.mutate,
+    };
+  }
+
   return {
-    invoices: invoicesQuery.data ?? mockComplianceInvoices,
+    invoices: invoicesQuery.data ?? [],
     isLoading: invoicesQuery.isLoading,
+    error: invoicesQuery.error,
+    refetch: invoicesQuery.refetch,
     summary: summaryQuery.data,
     validate: validateMutation.mutate,
     updateField: updateFieldMutation.mutate,

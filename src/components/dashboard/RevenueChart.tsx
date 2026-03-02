@@ -1,9 +1,16 @@
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { mockChartData } from '@/lib/mock-data';
+import { useDashboard } from '@/lib/hooks/useDashboard';
+import { Skeleton } from '@/components/ui/skeleton';
+import ApiErrorState from '@/components/shared/ApiErrorState';
 
 export default function RevenueChart() {
+  const { chartData, chartLoading, chartError, refetchChart } = useDashboard();
+
+  if (chartLoading) return <Skeleton className="h-[360px] rounded-xl" />;
+  if (chartError) return <ApiErrorState message={(chartError as Error).message} onRetry={refetchChart} />;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -28,7 +35,7 @@ export default function RevenueChart() {
           </div>
         </div>
         <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={mockChartData}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(210 100% 35%)" stopOpacity={0.15} />
