@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { mockActivities } from '@/lib/mock-data';
+import { useDashboard } from '@/lib/hooks/useDashboard';
+import { Skeleton } from '@/components/ui/skeleton';
+import ApiErrorState from '@/components/shared/ApiErrorState';
 import { timeAgo } from '@/lib/utils/format';
 import { FileText, CreditCard, ShieldCheck, Link2, AlertTriangle } from 'lucide-react';
 
-const typeIcons = {
+const typeIcons: Record<string, any> = {
   invoice: FileText,
   payment: CreditCard,
   compliance: ShieldCheck,
@@ -21,6 +22,11 @@ const statusVariants: Record<string, string> = {
 };
 
 export default function ActivityFeed() {
+  const { activities, activitiesLoading, activitiesError, refetchActivities } = useDashboard();
+
+  if (activitiesLoading) return <Skeleton className="h-[360px] rounded-xl" />;
+  if (activitiesError) return <ApiErrorState message={(activitiesError as Error).message} onRetry={refetchActivities} />;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -33,8 +39,8 @@ export default function ActivityFeed() {
           <span className="text-xs text-primary font-medium cursor-pointer hover:underline">View all</span>
         </div>
         <div className="space-y-3">
-          {mockActivities.map((item, i) => {
-            const Icon = typeIcons[item.type];
+          {activities.map((item: any, i: number) => {
+            const Icon = typeIcons[item.type] || FileText;
             return (
               <motion.div
                 key={item.id}

@@ -4,39 +4,21 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import ApiErrorState from '@/components/shared/ApiErrorState';
+import { useRegulatory } from '@/lib/hooks/useRegulatory';
 import { motion } from 'framer-motion';
-import { Clock, CheckCircle2, AlertTriangle, Copy, Download, FileCheck, Shield, Timer, ExternalLink } from 'lucide-react';
+import { Clock, CheckCircle2, AlertTriangle, Copy, Download, Shield, Timer, ExternalLink } from 'lucide-react';
 import { formatNaira } from '@/lib/utils/format';
-
-interface ClearanceItem {
-  id: string;
-  invoiceNumber: string;
-  customerName: string;
-  amount: number;
-  submittedAt: Date;
-  expiresAt: Date;
-  status: 'pending' | 'processing' | 'cleared' | 'expired';
-  irn?: string;
-  csid?: string;
-  stage: number;
-}
-
-const mockClearances: ClearanceItem[] = [
-  { id: '1', invoiceNumber: 'INV-2024-0848', customerName: 'MTN Nigeria', amount: 2_800_000, submittedAt: new Date(Date.now() - 3600000 * 12), expiresAt: new Date(Date.now() + 3600000 * 60), status: 'processing', irn: 'IRN-NG-2024-00384721', stage: 2 },
-  { id: '2', invoiceNumber: 'INV-2024-0851', customerName: 'Flour Mills of Nigeria', amount: 5_600_000, submittedAt: new Date(Date.now() - 3600000 * 48), expiresAt: new Date(Date.now() + 3600000 * 24), status: 'processing', irn: 'IRN-NG-2024-00384698', stage: 3 },
-  { id: '3', invoiceNumber: 'INV-2024-0845', customerName: 'Access Bank Plc', amount: 1_200_000, submittedAt: new Date(Date.now() - 3600000 * 70), expiresAt: new Date(Date.now() + 3600000 * 2), status: 'pending', irn: 'IRN-NG-2024-00384655', stage: 1 },
-  { id: '4', invoiceNumber: 'INV-2024-0840', customerName: 'Dangote Industries', amount: 4_500_000, submittedAt: new Date(Date.now() - 3600000 * 80), expiresAt: new Date(Date.now() - 3600000 * 8), status: 'expired', irn: 'IRN-NG-2024-00384601', stage: 4 },
-  { id: '5', invoiceNumber: 'INV-2024-0838', customerName: 'Nigerian Breweries', amount: 890_000, submittedAt: new Date(Date.now() - 3600000 * 96), expiresAt: new Date(Date.now() - 3600000 * 24), status: 'cleared', irn: 'IRN-NG-2024-00384590', csid: 'CSID-NG-2024-99281734', stage: 4 },
-];
 
 const stages = ['Submitted', 'Validating', 'FIRS Review', 'Cleared'];
 
-function CountdownTimer({ expiresAt, status }: { expiresAt: Date; status: string }) {
+function CountdownTimer({ expiresAt, status }: { expiresAt: string; status: string }) {
   const [remaining, setRemaining] = useState(0);
 
   useEffect(() => {
     const update = () => {
-      const diff = expiresAt.getTime() - Date.now();
+      const diff = new Date(expiresAt).getTime() - Date.now();
       setRemaining(Math.max(0, diff));
     };
     update();
@@ -50,10 +32,7 @@ function CountdownTimer({ expiresAt, status }: { expiresAt: Date; status: string
   const hours = Math.floor(remaining / 3600000);
   const minutes = Math.floor((remaining % 3600000) / 60000);
   const seconds = Math.floor((remaining % 60000) / 1000);
-  const totalHours = 72;
-  const elapsedHours = totalHours - hours;
-  const percentage = Math.min(100, (elapsedHours / totalHours) * 100);
-
+  const percentage = Math.min(100, ((72 - hours) / 72) * 100);
   const warningLevel = hours < 6 ? 'text-destructive' : hours < 24 ? 'text-warning-foreground' : 'text-success';
 
   return (
@@ -77,7 +56,6 @@ function TimelineStages({ currentStage, status }: { currentStage: number; status
         const isComplete = status === 'cleared' || stageNum < currentStage;
         const isCurrent = stageNum === currentStage && status !== 'cleared' && status !== 'expired';
         const isExpired = status === 'expired';
-
         return (
           <div key={stage} className="flex items-center gap-1">
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium ${
@@ -98,6 +76,7 @@ function TimelineStages({ currentStage, status }: { currentStage: number; status
 }
 
 export default function RegulatoryPage() {
+  const { invoices, isLoading, error, refetch, downloadStamped } = useRegulatory();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
@@ -106,16 +85,35 @@ export default function RegulatoryPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Regulatory Clearance" subtitle="72-hour CSID clearance tracking">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+        <div className="space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout title="Regulatory Clearance" subtitle="72-hour CSID clearance tracking">
+        <ApiErrorState message={(error as Error).message} onRetry={refetch} />
+      </DashboardLayout>
+    );
+  }
+
+  const clearances = invoices as any[];
   const summary = {
-    pending: mockClearances.filter(c => c.status === 'pending').length,
-    processing: mockClearances.filter(c => c.status === 'processing').length,
-    cleared: mockClearances.filter(c => c.status === 'cleared').length,
-    expired: mockClearances.filter(c => c.status === 'expired').length,
+    pending: clearances.filter((c: any) => c.status === 'pending').length,
+    processing: clearances.filter((c: any) => c.status === 'processing').length,
+    cleared: clearances.filter((c: any) => c.status === 'cleared').length,
+    expired: clearances.filter((c: any) => c.status === 'expired').length,
   };
 
   return (
     <DashboardLayout title="Regulatory Clearance" subtitle="72-hour CSID clearance tracking">
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'Pending', value: summary.pending, icon: Clock, color: 'text-muted-foreground' },
@@ -139,9 +137,8 @@ export default function RegulatoryPage() {
         ))}
       </div>
 
-      {/* Clearance Items */}
       <div className="space-y-4">
-        {mockClearances.map((item, i) => (
+        {clearances.map((item: any, i: number) => (
           <motion.div key={item.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}>
             <Card className={`p-5 shadow-card border-none ${item.status === 'expired' ? 'opacity-70' : ''}`}>
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -160,9 +157,7 @@ export default function RegulatoryPage() {
                     <span className="text-sm text-muted-foreground">{item.customerName}</span>
                     <span className="text-sm font-medium text-foreground">{formatNaira(item.amount)}</span>
                   </div>
-
                   <TimelineStages currentStage={item.stage} status={item.status} />
-
                   {item.irn && (
                     <div className="flex items-center gap-4 flex-wrap">
                       <div className="flex items-center gap-2">
@@ -184,12 +179,11 @@ export default function RegulatoryPage() {
                     </div>
                   )}
                 </div>
-
                 <div className="flex items-center gap-4 lg:flex-col lg:items-end">
                   <CountdownTimer expiresAt={item.expiresAt} status={item.status} />
                   <div className="flex gap-2">
                     {item.status === 'cleared' && (
-                      <Button variant="outline" size="sm" className="text-xs">
+                      <Button variant="outline" size="sm" className="text-xs" onClick={() => downloadStamped(item.id)}>
                         <Download className="w-3.5 h-3.5 mr-1" /> Stamp
                       </Button>
                     )}

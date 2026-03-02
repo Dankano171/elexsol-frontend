@@ -2,19 +2,24 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import KPICard from '@/components/dashboard/KPICard';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
+import ApiErrorState from '@/components/shared/ApiErrorState';
 import { useDashboard } from '@/lib/hooks/useDashboard';
 import { formatCompactNaira, formatPercentage } from '@/lib/utils/format';
 import { DollarSign, Gauge, TrendingUp, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
-  const { metrics: m, metricsLoading } = useDashboard();
+  const { metrics: m, metricsLoading, metricsError, refetchMetrics } = useDashboard();
 
   return (
     <DashboardLayout title="Dashboard" subtitle="Financial overview for your business">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {metricsLoading ? (
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)
+        ) : metricsError ? (
+          <div className="col-span-full">
+            <ApiErrorState message={(metricsError as Error).message} onRetry={refetchMetrics} />
+          </div>
         ) : (
           <>
             <KPICard
