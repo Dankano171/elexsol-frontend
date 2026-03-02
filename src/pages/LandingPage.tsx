@@ -20,43 +20,48 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-hidden">
       {/* Nav */}
-      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+      <header className="border-b border-border/40 bg-background/60 backdrop-blur-xl sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
               <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold text-foreground">Elexsol</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">Elexsol</span>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Sign in</Button>
-            <Button size="sm" onClick={() => navigate('/login')}>Get Started <ArrowRight className="w-4 h-4 ml-1" /></Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="font-medium">Sign in</Button>
+            <Button size="sm" onClick={() => navigate('/login')} className="font-medium">Get Started <ArrowRight className="w-4 h-4 ml-1" /></Button>
           </div>
         </div>
       </header>
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 gradient-hero opacity-[0.03]" />
-        <div className="max-w-6xl mx-auto px-6 py-24 lg:py-32 text-center relative z-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-6">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Trusted by 2,400+ Nigerian SMEs
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-gradient-to-br from-primary/20 via-primary/5 to-transparent blur-3xl -mr-48 -mt-48 opacity-60" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-gradient-to-tr from-primary/15 via-transparent to-transparent blur-3xl -ml-40 -mb-40 opacity-50" />
+
+        <div className="max-w-7xl mx-auto px-8 py-32 lg:py-40 relative z-10">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="max-w-3xl mx-auto text-center">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/8 border border-primary/20 text-primary text-xs font-semibold mb-8 backdrop-blur-sm">
+              <CheckCircle2 className="w-4 h-4" /> Trusted by 2,400+ Nigerian SMEs
             </span>
-            <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight mb-6">
+
+            <h1 className="text-5xl lg:text-7xl font-bold text-foreground leading-tight mb-8">
               Your Digital CFO for<br />
-              <span className="text-primary">Automated Compliance</span>
+              <span className="bg-gradient-to-r from-primary via-primary to-primary/80 bg-clip-text text-transparent">Automated Compliance</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+
+            <p className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed font-light">
               Elexsol automates FIRS compliance, integrates your financial data sources, and delivers growth analytics — so you can focus on building your business.
             </p>
-            <div className="flex items-center justify-center gap-4">
-              <Button size="lg" onClick={() => navigate('/login')} className="h-12 px-8 text-base">
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button size="lg" onClick={() => navigate('/login')} className="h-13 px-10 text-base font-semibold shadow-lg hover:shadow-xl transition-shadow">
                 Start Free Trial <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
-              <Button variant="outline" size="lg" onClick={() => navigate('/login')} className="h-12 px-8 text-base">
+              <Button variant="outline" size="lg" onClick={() => navigate('/login')} className="h-13 px-10 text-base font-semibold border-border/60 hover:bg-muted/80 transition-colors">
                 View Demo
               </Button>
             </div>
@@ -65,13 +70,20 @@ export default function LandingPage() {
       </section>
 
       {/* Stats */}
-      <section className="border-y border-border bg-muted/30">
-        <div className="max-w-6xl mx-auto px-6 py-12">
+      <section className="relative border-y border-border/40 bg-muted/15 backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5" />
+        <div className="max-w-7xl mx-auto px-8 py-16 relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
-              <motion.div key={stat.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }} className="text-center">
-                <p className="text-3xl font-bold text-foreground">{stat.value}</p>
-                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 + i * 0.1 }}
+                className="text-center group"
+              >
+                <p className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{stat.value}</p>
+                <p className="text-sm text-muted-foreground mt-3 font-medium">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -79,36 +91,43 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-3">Everything you need to stay compliant</h2>
-          <p className="text-muted-foreground">One platform for invoicing, tax compliance, and business intelligence</p>
+      <section className="max-w-7xl mx-auto px-8 py-24 lg:py-32">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">Everything you need to stay compliant</h2>
+          <p className="text-lg text-muted-foreground font-light">One platform for invoicing, tax compliance, and business intelligence</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {features.map((feature, i) => (
-            <motion.div key={feature.title} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.1 }}
-              className="p-6 rounded-2xl border border-border bg-card shadow-card hover:shadow-elevated transition-shadow"
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 + i * 0.1 }}
+              className="group relative p-8 rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm hover:border-primary/30 hover:bg-card/60 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
             >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <feature.icon className="w-6 h-6 text-primary" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 flex items-center justify-center mb-6 group-hover:from-primary/25 group-hover:to-primary/10 transition-colors">
+                  <feature.icon className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-3">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed font-light">{feature.desc}</p>
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+      <footer className="border-t border-border/40 bg-muted/30 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-8 py-12 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md">
               <Zap className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="text-sm font-semibold text-foreground">Elexsol</span>
           </div>
-          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Elexsol Technologies Ltd. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground font-light">© {new Date().getFullYear()} Elexsol Technologies Ltd. All rights reserved.</p>
         </div>
       </footer>
     </div>
