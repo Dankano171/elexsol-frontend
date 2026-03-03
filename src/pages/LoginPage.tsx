@@ -15,7 +15,7 @@ export default function LoginPage() {
   const { setAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('admin@elexsol.ng');
+  const [email, setEmail] = useState('demo@elexsol.ng');
   const [password, setPassword] = useState('');
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
