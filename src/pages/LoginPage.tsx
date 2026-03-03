@@ -10,12 +10,26 @@ import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/lib/store/authStore';
 import { toast } from 'sonner';
 
+const DEMO_EMAIL = 'demo@elexsol.ng';
+const DEMO_PASSWORD = 'demo1234';
+
+const DEMO_USER = {
+  id: 'demo-001',
+  email: DEMO_EMAIL,
+  firstName: 'Adebayo',
+  lastName: 'Ogunlesi',
+  businessName: 'Elexsol Technologies Ltd',
+  businessId: 'biz-demo-001',
+  role: 'admin' as const,
+  mfaEnabled: false,
+};
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('demo@elexsol.ng');
+  const [email, setEmail] = useState(DEMO_EMAIL);
   const [password, setPassword] = useState('');
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
@@ -24,6 +38,20 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Demo account — bypass API entirely
+      if (email.trim().toLowerCase() === DEMO_EMAIL) {
+        if (password !== DEMO_PASSWORD) {
+          toast.error('Invalid demo password. Use: demo1234');
+          setLoading(false);
+          return;
+        }
+        setAuth(DEMO_USER, 'demo-token');
+        toast.success('Welcome to the demo!');
+        navigate(ROUTES.DASHBOARD);
+        return;
+      }
+
+      // Real accounts — call backend API
       const data: any = await authApi.login({ email, password, mfaCode: mfaCode || undefined });
       if (data?.mfaRequired && !mfaCode) {
         setMfaRequired(true);
