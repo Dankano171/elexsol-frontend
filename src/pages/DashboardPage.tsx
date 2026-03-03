@@ -3,6 +3,7 @@ import KPICard from '@/components/dashboard/KPICard';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import ApiErrorState from '@/components/shared/ApiErrorState';
+import OnboardingBanner from '@/components/dashboard/OnboardingBanner';
 import { useDashboard } from '@/lib/hooks/useDashboard';
 import { formatCompactNaira, formatPercentage } from '@/lib/utils/format';
 import { DollarSign, Gauge, TrendingUp, AlertCircle } from 'lucide-react';
@@ -13,6 +14,8 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout title="Dashboard" subtitle="Financial overview for your business">
+      <OnboardingBanner />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {metricsLoading ? (
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)

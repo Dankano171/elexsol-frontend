@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/lib/store/authStore';
 
-const DEMO_EMAIL = 'admin@elexsol.ng';
+const DEMO_EMAIL = 'demo@elexsol.ng';
 
 export function isDemoAccount(): boolean {
   const { user } = useAuthStore.getState();
