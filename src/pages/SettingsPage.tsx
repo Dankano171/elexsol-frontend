@@ -1,21 +1,7 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
-import { User, Building2, Bell, Shield, Save, CheckCircle2, Lock, CreditCard, KeyRound, ShieldCheck } from 'lucide-react';
-import { NIGERIAN_STATES } from '@/lib/constants/nigerian-states';
-import { useAuthStore } from '@/lib/store/authStore';
-import { useOnboardingStore } from '@/lib/store/onboardingStore';
-import { authApi } from '@/lib/api/auth';
-import { toast } from 'sonner';
+import { User, Building2, Bell, Shield, CreditCard, KeyRound } from 'lucide-react';
 
 import ProfileTab from '@/components/settings/ProfileTab';
 import BusinessTab from '@/components/settings/BusinessTab';
@@ -24,10 +10,20 @@ import SecurityTab from '@/components/settings/SecurityTab';
 import FIRSCredentialsTab from '@/components/settings/FIRSCredentialsTab';
 import BillingTab from '@/components/settings/BillingTab';
 
+const VALID_TABS = ['profile', 'business', 'firs', 'billing', 'notifications', 'security'];
+
 export default function SettingsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') || 'profile';
+  const activeTab = VALID_TABS.includes(tabParam) ? tabParam : 'profile';
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value }, { replace: true });
+  };
+
   return (
     <DashboardLayout title="Settings" subtitle="Manage your account & preferences">
-      <Tabs defaultValue="profile" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="flex-wrap">
           <TabsTrigger value="profile"><User className="w-4 h-4 mr-1.5" /> Profile</TabsTrigger>
           <TabsTrigger value="business"><Building2 className="w-4 h-4 mr-1.5" /> Business</TabsTrigger>
