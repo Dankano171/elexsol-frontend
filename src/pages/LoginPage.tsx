@@ -41,7 +41,7 @@ export default function LoginPage() {
       // Demo account — bypass API entirely
       if (email.trim().toLowerCase() === DEMO_EMAIL) {
         if (password !== DEMO_PASSWORD) {
-          toast.error('Invalid demo password. Use: demo1234');
+          toast.error('Invalid demo password. Use: demo123');
           setLoading(false);
           return;
         }
