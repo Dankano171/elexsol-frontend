@@ -5,10 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiErrorState from '@/components/shared/ApiErrorState';
+import B2CComplianceTracker from '@/components/regulatory/B2CComplianceTracker';
 import { useRegulatory } from '@/lib/hooks/useRegulatory';
 import { motion } from 'framer-motion';
-import { Clock, CheckCircle2, AlertTriangle, Copy, Download, Shield, Timer, ExternalLink } from 'lucide-react';
+import { Clock, CheckCircle2, AlertTriangle, Copy, Download, Shield, Timer, ExternalLink, FileText, Receipt } from 'lucide-react';
 import { formatNaira } from '@/lib/utils/format';
 
 const stages = ['Submitted', 'Validating', 'FIRS Review', 'Cleared'];
@@ -75,7 +77,7 @@ function TimelineStages({ currentStage, status }: { currentStage: number; status
   );
 }
 
-export default function RegulatoryPage() {
+function B2BInvoicesContent() {
   const { invoices, isLoading, error, refetch, downloadStamped } = useRegulatory();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -87,21 +89,17 @@ export default function RegulatoryPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Regulatory Clearance" subtitle="72-hour CSID clearance tracking">
+      <>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
         </div>
         <div className="space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
-      </DashboardLayout>
+      </>
     );
   }
 
   if (error) {
-    return (
-      <DashboardLayout title="Regulatory Clearance" subtitle="72-hour CSID clearance tracking">
-        <ApiErrorState message={(error as Error).message} onRetry={refetch} />
-      </DashboardLayout>
-    );
+    return <ApiErrorState message={(error as Error).message} onRetry={refetch} />;
   }
 
   const clearances = invoices as any[];
@@ -113,7 +111,7 @@ export default function RegulatoryPage() {
   };
 
   return (
-    <DashboardLayout title="Regulatory Clearance" subtitle="72-hour CSID clearance tracking">
+    <>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'Pending', value: summary.pending, icon: Clock, color: 'text-muted-foreground' },
@@ -197,6 +195,31 @@ export default function RegulatoryPage() {
           </motion.div>
         ))}
       </div>
+    </>
+  );
+}
+
+export default function RegulatoryPage() {
+  return (
+    <DashboardLayout title="Regulatory Clearance" subtitle="72-hour CSID clearance tracking">
+      <Tabs defaultValue="b2b" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="b2b" className="gap-1.5">
+            <FileText className="w-4 h-4" /> B2B Invoices
+          </TabsTrigger>
+          <TabsTrigger value="b2c" className="gap-1.5">
+            <Receipt className="w-4 h-4" /> B2C Receipts
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="b2b">
+          <B2BInvoicesContent />
+        </TabsContent>
+
+        <TabsContent value="b2c">
+          <B2CComplianceTracker />
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 }
