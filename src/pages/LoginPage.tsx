@@ -45,6 +45,13 @@ export default function LoginPage() {
           setLoading(false);
           return;
         }
+        // Set demo onboarding: tier + payment done, keys missing
+        const { useOnboardingStore } = await import('@/lib/store/onboardingStore');
+        const onboarding = useOnboardingStore.getState();
+        onboarding.setAccountTier('tier-3');
+        onboarding.setPaymentDetails(true);
+        onboarding.setCryptoKeys(false);
+
         setAuth(DEMO_USER, 'demo-token');
         toast.success('Welcome to the demo!');
         navigate(ROUTES.DASHBOARD);
