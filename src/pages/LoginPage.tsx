@@ -11,7 +11,7 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { toast } from 'sonner';
 
 const DEMO_EMAIL = 'demo@elexsol.ng';
-const DEMO_PASSWORD = 'demo1234';
+const DEMO_PASSWORD = 'demo123';
 
 const DEMO_USER = {
   id: 'demo-001',
