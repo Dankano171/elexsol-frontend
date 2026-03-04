@@ -182,7 +182,8 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Don't have an account? <span className="text-primary font-medium cursor-pointer hover:underline">Get started</span>
+            Don't have an account?{' '}
+            <a href="/signup" className="text-primary font-medium hover:underline">Get started</a>
           </p>
         </motion.div>
       </div>
