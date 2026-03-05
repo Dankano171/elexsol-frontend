@@ -9,11 +9,11 @@ const features = [
   { icon: BarChart3, title: 'Growth Analytics', desc: 'Revenue trends, payment velocity & cash flow forecasting' },
 ];
 
-const stats = [
-  { value: '2,400+', label: 'SMEs Onboarded' },
-  { value: '₦12B+', label: 'Processed Monthly' },
-  { value: '99.7%', label: 'Compliance Rate' },
-  { value: '14 days', label: 'Avg. Payment Velocity' },
+const featureHighlights = [
+  { title: 'Zero-Touch FIRS Synchronization', description: 'Invoices are validated, signed, and submitted to FIRS automatically — no manual uploads required.' },
+  { title: 'Bank-Grade ECDSA Cryptography', description: 'Every document is cryptographically signed with industry-standard elliptic curve keys.' },
+  { title: 'Peppol BIS 3.0 Standard Ready', description: 'Future-proof your invoicing with international e-invoicing standard compliance built in.' },
+  { title: 'Automated Reconciliation Engine', description: 'Match payments to invoices across multiple data sources in real time.' },
 ];
 
 const integrations = [
@@ -24,7 +24,6 @@ const integrations = [
   { name: 'Zoho', icon: Link2 },
 ];
 
-/* ── Floating dashboard mockup ─────────────────────────────── */
 function DashboardMockup() {
   return (
     <motion.div
@@ -34,24 +33,15 @@ function DashboardMockup() {
       className="relative w-full max-w-2xl mx-auto lg:mx-0"
       style={{ perspective: '1200px' }}
     >
-      {/* Main window */}
       <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl shadow-2xl overflow-hidden">
-        {/* Title bar */}
         <div className="flex items-center gap-2 px-5 py-3 border-b border-border/40 bg-muted/30">
           <span className="w-3 h-3 rounded-full bg-destructive/60" />
           <span className="w-3 h-3 rounded-full bg-warning/60" />
           <span className="w-3 h-3 rounded-full bg-success/60" />
           <span className="ml-3 text-[11px] text-muted-foreground font-medium tracking-wide">elexsol — dashboard</span>
         </div>
-
         <div className="p-5 grid grid-cols-3 gap-3">
-          {/* Card 1 — FIRS Status */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="col-span-2 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 p-4 backdrop-blur-sm"
-          >
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="col-span-2 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 p-4 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-3">
               <ShieldCheck className="w-4 h-4 text-primary" />
               <span className="text-xs font-semibold text-foreground tracking-wide">FIRS Tax Status</span>
@@ -63,14 +53,7 @@ function DashboardMockup() {
               <span className="text-[10px] text-muted-foreground">Last sync 2m ago</span>
             </div>
           </motion.div>
-
-          {/* Card 2 — Revenue */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.95 }}
-            className="rounded-xl bg-card border border-border/50 p-4 backdrop-blur-sm"
-          >
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.95 }} className="rounded-xl bg-card border border-border/50 p-4 backdrop-blur-sm">
             <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Revenue</span>
             <p className="text-lg font-bold text-foreground mt-1">₦4.2M</p>
             <div className="flex items-center gap-1 mt-1">
@@ -78,26 +61,12 @@ function DashboardMockup() {
               <span className="text-[10px] text-success font-semibold">+18.3%</span>
             </div>
           </motion.div>
-
-          {/* Card 3 — Connected */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.1 }}
-            className="rounded-xl bg-card border border-border/50 p-4 backdrop-blur-sm"
-          >
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1 }} className="rounded-xl bg-card border border-border/50 p-4 backdrop-blur-sm">
             <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Sources</span>
             <p className="text-lg font-bold text-foreground mt-1">5</p>
             <span className="text-[10px] text-muted-foreground">Connected</span>
           </motion.div>
-
-          {/* Card 4 — mini chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2 }}
-            className="col-span-2 rounded-xl bg-card border border-border/50 p-4 backdrop-blur-sm"
-          >
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }} className="col-span-2 rounded-xl bg-card border border-border/50 p-4 backdrop-blur-sm">
             <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Monthly Invoices</span>
             <div className="flex items-end gap-1.5 mt-3 h-10">
               {[35, 55, 42, 68, 52, 78, 65, 88, 72, 95, 82, 100].map((h, i) => (
@@ -119,8 +88,6 @@ function DashboardMockup() {
           </motion.div>
         </div>
       </div>
-
-      {/* Floating accent card */}
       <motion.div
         initial={{ opacity: 0, x: 20, y: 20 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
@@ -144,7 +111,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
-      {/* Dotted grid background */}
       <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
@@ -152,7 +118,6 @@ export default function LandingPage() {
           backgroundSize: '28px 28px',
         }}
       />
-      {/* Radial glow */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[900px] h-[700px] pointer-events-none z-0 rounded-full"
         style={{ background: 'radial-gradient(ellipse at center, hsl(var(--primary) / 0.07) 0%, transparent 70%)' }}
       />
@@ -168,18 +133,17 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="font-medium">Sign in</Button>
-            <Button size="sm" onClick={() => navigate('/login')} className="font-semibold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all">
+            <Button size="sm" onClick={() => navigate('/signup')} className="font-semibold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all">
               Get Started <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
         </div>
       </header>
 
-      {/* ═══ HERO — split layout ═══ */}
+      {/* Hero */}
       <section className="relative z-10">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-16 lg:gap-12 items-center">
-            {/* Left — copy */}
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}>
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/8 border border-primary/20 text-primary text-xs font-semibold mb-8 backdrop-blur-sm">
                 <CheckCircle2 className="w-4 h-4" /> Trusted by 2,400+ Nigerian SMEs
@@ -199,7 +163,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row items-start gap-4 mb-10">
                 <Button
                   size="lg"
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/signup')}
                   className="h-14 px-10 text-base font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 transition-all"
                 >
                   Start Free Trial <ArrowRight className="w-5 h-5 ml-2" />
@@ -214,7 +178,6 @@ export default function LandingPage() {
                 </Button>
               </div>
 
-              {/* Trust — integrations */}
               <div className="pt-6 border-t border-border/40">
                 <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium mb-4">Integrates with</p>
                 <div className="flex items-center gap-5 flex-wrap">
@@ -228,7 +191,6 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Right — dashboard mockup */}
             <div className="relative">
               <DashboardMockup />
             </div>
@@ -236,20 +198,19 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Feature Highlights (replaces vanity metrics) */}
       <section className="relative z-10 border-y border-border/40 bg-muted/20 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featureHighlights.map((feat, i) => (
               <motion.div
-                key={stat.label}
+                key={feat.title}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + i * 0.1 }}
-                className="text-center"
               >
-                <p className="text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight">{stat.value}</p>
-                <p className="text-sm text-muted-foreground mt-2 font-medium">{stat.label}</p>
+                <h3 className="text-sm font-bold text-foreground mb-2">{feat.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{feat.description}</p>
               </motion.div>
             ))}
           </div>

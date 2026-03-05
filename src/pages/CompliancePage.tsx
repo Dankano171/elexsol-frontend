@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,10 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import ApiErrorState from '@/components/shared/ApiErrorState';
+import EmptyState from '@/components/shared/EmptyState';
 import { useCompliance } from '@/lib/hooks/useCompliance';
 import { useComplianceStore } from '@/lib/store/complianceStore';
+import { isDemoAccount } from '@/lib/utils/isDemoAccount';
 import { formatNaira, formatDate } from '@/lib/utils/format';
-import { AlertTriangle, CheckCircle, Clock, FileText, Download, Filter, RefreshCw } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, FileText, Download, Filter, RefreshCw, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 const statusConfig: Record<string, { label: string; className: string; icon: any }> = {
@@ -22,8 +25,10 @@ const statusConfig: Record<string, { label: string; className: string; icon: any
 };
 
 export default function CompliancePage() {
+  const navigate = useNavigate();
   const { invoices, isLoading, error, refetch, validate, bulkValidate, exportFlagged } = useCompliance();
   const { selectedRows, toggleRow, selectAll, clearSelection } = useComplianceStore();
+  const demo = isDemoAccount();
 
   const flaggedCount = invoices.filter((i: any) => i.status === 'flagged').length;
 
@@ -51,6 +56,21 @@ export default function CompliancePage() {
     return (
       <DashboardLayout title="Compliance Center" subtitle="FIRS invoice validation & management">
         <ApiErrorState message={(error as Error).message} onRetry={refetch} />
+      </DashboardLayout>
+    );
+  }
+
+  // Empty state for non-demo accounts with no data
+  if (!demo && invoices.length === 0) {
+    return (
+      <DashboardLayout title="Compliance Center" subtitle="FIRS invoice validation & management">
+        <EmptyState
+          icon={ShieldCheck}
+          title="Automated FIRS Validation Engine"
+          description="Elexsol automatically validates every invoice against FIRS requirements — checking TINs, tax calculations, and filing deadlines. Connect your data sources and upload your FIRS credentials to activate."
+          ctaLabel="Complete Setup"
+          ctaLink="/settings?tab=firs"
+        />
       </DashboardLayout>
     );
   }
@@ -122,8 +142,12 @@ export default function CompliancePage() {
                 const StatusIcon = status.icon;
                 const isFlagged = inv.status === 'flagged';
                 return (
-                  <TableRow key={inv.id} className={`cursor-pointer hover:bg-muted/30 transition-colors ${isFlagged ? 'bg-destructive/3' : ''}`}>
-                    <TableCell><Checkbox checked={selectedRows.includes(inv.id)} onCheckedChange={() => toggleRow(inv.id)} /></TableCell>
+                  <TableRow
+                    key={inv.id}
+                    className={`cursor-pointer hover:bg-muted/30 transition-colors ${isFlagged ? 'bg-destructive/3' : ''}`}
+                    onClick={() => navigate(`/compliance/${inv.id}`)}
+                  >
+                    <TableCell onClick={e => e.stopPropagation()}><Checkbox checked={selectedRows.includes(inv.id)} onCheckedChange={() => toggleRow(inv.id)} /></TableCell>
                     <TableCell className="text-sm font-medium">{inv.invoiceNumber}</TableCell>
                     <TableCell className="text-sm">{inv.customerName}</TableCell>
                     <TableCell className="text-sm font-mono text-xs">{inv.customerTin || <span className="text-destructive italic">Missing</span>}</TableCell>
@@ -138,7 +162,7 @@ export default function CompliancePage() {
                         <p className="text-[10px] text-destructive mt-1">{inv.validationErrors.map((e: any) => e.message).join(', ')}</p>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={e => e.stopPropagation()}>
                       {isFlagged && (
                         <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => validate(inv.id)}>
                           <RefreshCw className="w-3 h-3 mr-1" /> Re-validate
