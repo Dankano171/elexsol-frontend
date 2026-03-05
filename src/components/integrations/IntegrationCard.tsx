@@ -6,7 +6,7 @@ import { Integration } from '@/types/integrations';
 import { BookOpen, MessageCircle, Calculator, RefreshCw, ExternalLink } from 'lucide-react';
 import { timeAgo } from '@/lib/utils/format';
 
-const providerIcons = {
+const providerIcons: Record<string, any> = {
   zoho: BookOpen,
   whatsapp: MessageCircle,
   quickbooks: Calculator,
@@ -23,11 +23,12 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 interface IntegrationCardProps {
   integration: Integration;
   delay?: number;
+  onClick?: () => void;
 }
 
-export default function IntegrationCard({ integration, delay = 0 }: IntegrationCardProps) {
-  const Icon = providerIcons[integration.provider];
-  const status = statusConfig[integration.status];
+export default function IntegrationCard({ integration, delay = 0, onClick }: IntegrationCardProps) {
+  const Icon = providerIcons[integration.provider] || BookOpen;
+  const status = statusConfig[integration.status] || statusConfig.disconnected;
   const isConnected = integration.status === 'active';
 
   return (
@@ -36,7 +37,7 @@ export default function IntegrationCard({ integration, delay = 0 }: IntegrationC
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
     >
-      <Card className="p-5 shadow-card border-none hover:shadow-elevated transition-shadow">
+      <Card className="p-5 shadow-card border-none hover:shadow-elevated transition-shadow cursor-pointer" onClick={onClick}>
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center">
@@ -48,7 +49,7 @@ export default function IntegrationCard({ integration, delay = 0 }: IntegrationC
             </div>
           </div>
           <Badge variant="outline" className={status.className}>
-            {isConnected && <span className="w-1.5 h-1.5 rounded-full bg-success mr-1.5 animate-pulse_dot" />}
+            {isConnected && <span className="w-1.5 h-1.5 rounded-full bg-success mr-1.5 animate-pulse" />}
             {status.label}
           </Badge>
         </div>
@@ -66,7 +67,7 @@ export default function IntegrationCard({ integration, delay = 0 }: IntegrationC
           </div>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={e => e.stopPropagation()}>
           {isConnected ? (
             <>
               <Button variant="outline" size="sm" className="flex-1 text-xs">

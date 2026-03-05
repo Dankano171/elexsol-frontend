@@ -8,8 +8,11 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import DashboardPage from "./pages/DashboardPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
+import IntegrationConnectPage from "./pages/IntegrationConnectPage";
 import CompliancePage from "./pages/CompliancePage";
+import InvoiceDetailPage from "./pages/InvoiceDetailPage";
 import RegulatoryPage from "./pages/RegulatoryPage";
+import RegulatoryDetailPage from "./pages/RegulatoryDetailPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -38,8 +41,11 @@ const App = () => (
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/integrations" element={<IntegrationsPage />} />
+          <Route path="/integrations/:provider" element={<IntegrationConnectPage />} />
           <Route path="/compliance" element={<CompliancePage />} />
+          <Route path="/compliance/:id" element={<InvoiceDetailPage />} />
           <Route path="/regulatory" element={<RegulatoryPage />} />
+          <Route path="/regulatory/:id" element={<RegulatoryDetailPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/settings" element={<SettingsPage />} />

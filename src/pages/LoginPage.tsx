@@ -38,22 +38,22 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Demo account — bypass API entirely
+      // Demo account — bypass API, set fully populated state
       if (email.trim().toLowerCase() === DEMO_EMAIL) {
         if (password !== DEMO_PASSWORD) {
           toast.error('Invalid demo password. Use: demo123');
           setLoading(false);
           return;
         }
-        // Set demo onboarding: tier + payment done, keys missing
+        // Demo = fully configured, no onboarding
         const { useOnboardingStore } = await import('@/lib/store/onboardingStore');
         const onboarding = useOnboardingStore.getState();
         onboarding.setAccountTier('tier-3');
         onboarding.setPaymentDetails(true);
-        onboarding.setCryptoKeys(false);
+        onboarding.setCryptoKeys(true);
 
         setAuth(DEMO_USER, 'demo-token');
-        toast.success('Welcome to the demo!');
+        toast.success('Welcome to the Elexsol demo!');
         navigate(ROUTES.DASHBOARD);
         return;
       }
@@ -107,18 +107,6 @@ export default function LoginPage() {
           <p className="text-lg text-primary-foreground/70">
             Your Digital CFO for automated FIRS compliance, multi-source data integration, and business growth analytics.
           </p>
-          <div className="mt-10 grid grid-cols-3 gap-4 text-center">
-            {[
-              { value: '2,400+', label: 'SMEs' },
-              { value: '₦12B+', label: 'Processed' },
-              { value: '99.7%', label: 'Compliance' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="text-2xl font-bold text-primary-foreground">{stat.value}</p>
-                <p className="text-xs text-primary-foreground/60">{stat.label}</p>
-              </div>
-            ))}
-          </div>
         </motion.div>
       </div>
 

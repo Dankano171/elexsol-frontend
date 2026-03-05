@@ -3,25 +3,30 @@ import KPICard from '@/components/dashboard/KPICard';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import ApiErrorState from '@/components/shared/ApiErrorState';
-import OnboardingBanner from '@/components/dashboard/OnboardingBanner';
-import DashboardOnboarding from '@/components/dashboard/DashboardOnboarding';
+import EmptyState from '@/components/shared/EmptyState';
 import { useDashboard } from '@/lib/hooks/useDashboard';
+import { isDemoAccount } from '@/lib/utils/isDemoAccount';
 import { useOnboardingStore } from '@/lib/store/onboardingStore';
 import { formatCompactNaira, formatPercentage } from '@/lib/utils/format';
-import { DollarSign, Gauge, TrendingUp, AlertCircle } from 'lucide-react';
+import { DollarSign, Gauge, TrendingUp, AlertCircle, LayoutDashboard } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const { metrics: m, metricsLoading, metricsError, refetchMetrics } = useDashboard();
+  const demo = isDemoAccount();
   const { isOnboardingComplete } = useOnboardingStore();
-  const onboardingDone = isOnboardingComplete();
+  const showPopulated = demo || isOnboardingComplete();
 
   return (
     <DashboardLayout title="Dashboard" subtitle="Financial overview for your business">
-      <OnboardingBanner />
-
-      {!onboardingDone ? (
-        <DashboardOnboarding />
+      {!showPopulated ? (
+        <EmptyState
+          icon={LayoutDashboard}
+          title="Welcome to Elexsol"
+          description="Your financial dashboard will come alive once you connect your accounting sources and configure FIRS credentials. Complete your setup to unlock real-time analytics and compliance tracking."
+          ctaLabel="Complete Setup"
+          ctaLink="/settings"
+        />
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

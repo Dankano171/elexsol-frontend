@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/card';
@@ -7,10 +8,12 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiErrorState from '@/components/shared/ApiErrorState';
+import EmptyState from '@/components/shared/EmptyState';
 import B2CComplianceTracker from '@/components/regulatory/B2CComplianceTracker';
 import { useRegulatory } from '@/lib/hooks/useRegulatory';
+import { isDemoAccount } from '@/lib/utils/isDemoAccount';
 import { motion } from 'framer-motion';
-import { Clock, CheckCircle2, AlertTriangle, Copy, Download, Shield, Timer, ExternalLink, FileText, Receipt } from 'lucide-react';
+import { Clock, CheckCircle2, AlertTriangle, Copy, Download, Shield, Timer, ExternalLink, FileText, Receipt, FileCheck } from 'lucide-react';
 import { formatNaira } from '@/lib/utils/format';
 
 const stages = ['Submitted', 'Validating', 'FIRS Review', 'Cleared'];
@@ -78,7 +81,9 @@ function TimelineStages({ currentStage, status }: { currentStage: number; status
 }
 
 function B2BInvoicesContent() {
+  const navigate = useNavigate();
   const { invoices, isLoading, error, refetch, downloadStamped } = useRegulatory();
+  const demo = isDemoAccount();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
@@ -103,6 +108,19 @@ function B2BInvoicesContent() {
   }
 
   const clearances = invoices as any[];
+
+  if (!demo && clearances.length === 0) {
+    return (
+      <EmptyState
+        icon={FileCheck}
+        title="CSID & Certificate Management"
+        description="The regulatory clearance tracker monitors your FIRS submissions through the 72-hour CSID clearance window. Upload your FIRS credentials and start submitting invoices to see real-time clearance status."
+        ctaLabel="Upload FIRS Credentials"
+        ctaLink="/settings?tab=firs"
+      />
+    );
+  }
+
   const summary = {
     pending: clearances.filter((c: any) => c.status === 'pending').length,
     processing: clearances.filter((c: any) => c.status === 'processing').length,
@@ -138,7 +156,10 @@ function B2BInvoicesContent() {
       <div className="space-y-4">
         {clearances.map((item: any, i: number) => (
           <motion.div key={item.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}>
-            <Card className={`p-5 shadow-card border-none ${item.status === 'expired' ? 'opacity-70' : ''}`}>
+            <Card
+              className={`p-5 shadow-card border-none cursor-pointer hover:shadow-elevated transition-shadow ${item.status === 'expired' ? 'opacity-70' : ''}`}
+              onClick={() => navigate(`/regulatory/${item.id}`)}
+            >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-3 flex-wrap">
@@ -157,7 +178,7 @@ function B2BInvoicesContent() {
                   </div>
                   <TimelineStages currentStage={item.stage} status={item.status} />
                   {item.irn && (
-                    <div className="flex items-center gap-4 flex-wrap">
+                    <div className="flex items-center gap-4 flex-wrap" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">IRN:</span>
                         <code className="text-xs font-mono bg-muted px-2 py-0.5 rounded">{item.irn}</code>
@@ -177,7 +198,7 @@ function B2BInvoicesContent() {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-4 lg:flex-col lg:items-end">
+                <div className="flex items-center gap-4 lg:flex-col lg:items-end" onClick={e => e.stopPropagation()}>
                   <CountdownTimer expiresAt={item.expiresAt} status={item.status} />
                   <div className="flex gap-2">
                     {item.status === 'cleared' && (
