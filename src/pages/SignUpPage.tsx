@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/lib/constants/routes';
-import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/lib/store/authStore';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function SignUpPage() {
@@ -37,23 +37,42 @@ export default function SignUpPage() {
     }
     setLoading(true);
     try {
-      const data: any = await authApi.register({
+      const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
-        firstName: form.businessName.split(' ')[0] || '',
-        lastName: form.businessName.split(' ').slice(1).join(' ') || '',
-        businessName: form.businessName,
-        tin: '',
-        industry: '',
-        state: '',
-        phone: form.phone,
+        options: {
+          data: {
+            first_name: form.businessName.split(' ')[0] || '',
+            last_name: form.businessName.split(' ').slice(1).join(' ') || '',
+            business_name: form.businessName,
+            phone: form.phone,
+          },
+        },
       });
-      if (data?.user && data?.accessToken) {
-        setAuth(data.user, data.accessToken);
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      if (data.user && data.session) {
+        // Auto-signed in
+        const user = {
+          id: data.user.id,
+          email: data.user.email || '',
+          firstName: data.user.user_metadata?.first_name || '',
+          lastName: data.user.user_metadata?.last_name || '',
+          businessName: data.user.user_metadata?.business_name || '',
+          businessId: '',
+          role: 'admin' as const,
+          mfaEnabled: false,
+        };
+        setAuth(user, data.session.access_token);
         toast.success('Account created! Welcome to Elexsol.');
         navigate(ROUTES.DASHBOARD);
       } else {
-        toast.success('Account created! Please sign in.');
+        // Email confirmation required
+        toast.success('Account created! Please check your email to confirm, then sign in.');
         navigate(ROUTES.LOGIN);
       }
     } catch (error: any) {

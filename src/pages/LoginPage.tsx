@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/lib/constants/routes';
-import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/lib/store/authStore';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const DEMO_EMAIL = 'demo@elexsol.ng';
@@ -31,21 +31,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState(DEMO_EMAIL);
   const [password, setPassword] = useState('');
-  const [mfaRequired, setMfaRequired] = useState(false);
-  const [mfaCode, setMfaCode] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Demo account — bypass API, set fully populated state
+      // Demo account — bypass API
       if (email.trim().toLowerCase() === DEMO_EMAIL) {
         if (password !== DEMO_PASSWORD) {
           toast.error('Invalid demo password. Use: demo123');
           setLoading(false);
           return;
         }
-        // Demo = fully configured, no onboarding
         const { useOnboardingStore } = await import('@/lib/store/onboardingStore');
         const onboarding = useOnboardingStore.getState();
         onboarding.setAccountTier('tier-3');
@@ -58,16 +55,32 @@ export default function LoginPage() {
         return;
       }
 
-      // Real accounts — call backend API
-      const data: any = await authApi.login({ email, password, mfaCode: mfaCode || undefined });
-      if (data?.mfaRequired && !mfaCode) {
-        setMfaRequired(true);
-        setLoading(false);
+      // Real Supabase auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message);
         return;
       }
-      setAuth(data.user, data.accessToken);
-      toast.success('Welcome back!');
-      navigate(ROUTES.DASHBOARD);
+
+      if (data.user) {
+        const user = {
+          id: data.user.id,
+          email: data.user.email || '',
+          firstName: data.user.user_metadata?.first_name || '',
+          lastName: data.user.user_metadata?.last_name || '',
+          businessName: data.user.user_metadata?.business_name || '',
+          businessId: data.user.user_metadata?.business_id || '',
+          role: 'admin' as const,
+          mfaEnabled: false,
+        };
+        setAuth(user, data.session?.access_token || '');
+        toast.success('Welcome back!');
+        navigate(ROUTES.DASHBOARD);
+      }
     } catch (error: any) {
       toast.error(error?.message || 'Login failed. Please check your credentials.');
     } finally {
@@ -157,15 +170,8 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {mfaRequired && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
-                <Label htmlFor="mfa" className="text-sm font-medium">MFA Code</Label>
-                <Input id="mfa" placeholder="Enter 6-digit code" className="h-11" value={mfaCode} onChange={e => setMfaCode(e.target.value)} maxLength={6} />
-              </motion.div>
-            )}
-
             <Button type="submit" className="w-full h-11 font-medium" disabled={loading}>
-              {loading ? 'Signing in...' : mfaRequired ? 'Verify & Sign in' : 'Sign in'}
+              {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
 
