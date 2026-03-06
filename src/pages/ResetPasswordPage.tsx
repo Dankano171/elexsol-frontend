@@ -112,8 +112,8 @@ export default function ResetPasswordPage() {
 
           {success ? (
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8 text-primary" />
               </div>
               <h2 className="text-2xl font-bold text-foreground">Password updated</h2>
               <p className="text-sm text-muted-foreground">
