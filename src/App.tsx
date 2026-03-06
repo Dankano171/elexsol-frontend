@@ -20,6 +20,7 @@ import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const P = ({ children }: { children: React.ReactNode }) => <ProtectedRoute>{children}</ProtectedRoute>;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -43,17 +46,17 @@ const App = () => (
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/integrations" element={<IntegrationsPage />} />
-          <Route path="/integrations/:provider" element={<IntegrationConnectPage />} />
-          <Route path="/compliance" element={<CompliancePage />} />
-          <Route path="/compliance/:id" element={<InvoiceDetailPage />} />
-          <Route path="/regulatory" element={<RegulatoryPage />} />
-          <Route path="/regulatory/:id" element={<RegulatoryDetailPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/admin/elex-control-99" element={<AdminPage />} />
+          <Route path="/dashboard" element={<P><DashboardPage /></P>} />
+          <Route path="/integrations" element={<P><IntegrationsPage /></P>} />
+          <Route path="/integrations/:provider" element={<P><IntegrationConnectPage /></P>} />
+          <Route path="/compliance" element={<P><CompliancePage /></P>} />
+          <Route path="/compliance/:id" element={<P><InvoiceDetailPage /></P>} />
+          <Route path="/regulatory" element={<P><RegulatoryPage /></P>} />
+          <Route path="/regulatory/:id" element={<P><RegulatoryDetailPage /></P>} />
+          <Route path="/analytics" element={<P><AnalyticsPage /></P>} />
+          <Route path="/reports" element={<P><ReportsPage /></P>} />
+          <Route path="/settings" element={<P><SettingsPage /></P>} />
+          <Route path="/admin/elex-control-99" element={<P><AdminPage /></P>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
